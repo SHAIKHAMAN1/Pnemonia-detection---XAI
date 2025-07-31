@@ -1,0 +1,18 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.env.*
+
+# Model files (too large for Git)
+*.keras
+*.h5
+*.pt
+*.pkl
+*.ckpt
+# Ignore trained Keras model files
+model/pneumonia_model_best.keras
+model/pneumonia_model_final.keras
+model/*.keras
