@@ -1,15 +1,16 @@
-import React from 'react'
-import PredictionForm from './pages/PredictionForm'
-
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import PredictionForm from './pages/PredictionForm.jsx';
+import AnalysisPage from './pages/AnalysisPage.jsx'; // New page
 
 function App() {
   return (
-    <div>
-      <PredictionForm/>
-
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<PredictionForm />} />
+        <Route path="/analysis" element={<AnalysisPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;

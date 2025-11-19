@@ -3,24 +3,24 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 import os
+from flask import Flask, request, jsonify
+from model.explainers import generate_explanations # You should have this function
 
-# Load the trained model
+# Load model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'pneumonia_model_final.keras')
 model = load_model(MODEL_PATH)
 
-# Prediction class labels (based on your binary classification: 0 = Normal, 1 = Pneumonia)
+# Class labels
 class_labels = {0: "Normal", 1: "Pneumonia"}
 
 def preprocess_image(img_path, target_size=(224, 224)):
-    """Preprocess input image: resize, normalize."""
     img = image.load_img(img_path, target_size=target_size)
     img_array = image.img_to_array(img)
-    img_array = img_array / 255.0  # Normalize to [0, 1]
-    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    img_array = img_array / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
     return img_array
 
 def predict_diagnosis(img_path):
-    """Predict class (Pneumonia or Normal) from input X-ray image."""
     try:
         img_tensor = preprocess_image(img_path)
         prediction = model.predict(img_tensor)[0][0]
@@ -33,3 +33,39 @@ def predict_diagnosis(img_path):
         }
     except Exception as e:
         return {"error": str(e)}
+
+# Flask app and route
+app = Flask(__name__)
+
+@app.route('/explain', methods=['POST'])
+def explain_route():
+    image_file = request.files.get('image')
+    patient_id = request.form.get('patientId')
+
+    if not image_file or not patient_id:
+        return jsonify({'error': 'Missing image or patientId'}), 400
+
+    # Create directory for this patient
+    save_dir = os.path.join('static', 'patient_data', patient_id)
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Save image
+    img_path = os.path.join(save_dir, image_file.filename)
+    image_file.save(img_path)
+
+    # Predict
+    prediction = predict_diagnosis(img_path)
+
+    # Generate explanation images
+    generate_explanations(model, img_path, save_dir)  # Saves gradcam.png, lime.png, occlusion.png
+
+    # Add image paths to response
+    response = {
+        "label": prediction["label"],
+        "confidence": prediction["confidence"],
+        "gradcam": f"/static/patient_data/{patient_id}/gradcam.png",
+        "lime": f"/static/patient_data/{patient_id}/lime.png",
+        "occlusion": f"/static/patient_data/{patient_id}/occlusion.png"
+    }
+
+    return jsonify(response)
