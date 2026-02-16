@@ -1,5 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Upload, FileCheck2, Activity, Loader2, ChevronRight, ShieldCheck, Stethoscope, BrainCircuit } from 'lucide-react';
 
 function PredictionForm() {
   const [file, setFile] = useState(null);
@@ -31,11 +38,9 @@ function PredictionForm() {
     if (!file) return;
 
     setLoading(true);
-    // disable file input while uploading for safety
     if (fileInputRef.current) fileInputRef.current.disabled = true;
 
     try {
-      // create a stable copy of the file
       const stableFile = new File([file], file.name, { type: file.type });
 
       const formData = new FormData();
@@ -67,8 +72,6 @@ function PredictionForm() {
   };
 
   const handleAnalysisClick = async () => {
-    // read file directly from the input when starting the upload,
-    // this reduces chances of a changed/stale reference
     const liveFile = fileInputRef.current?.files?.[0] ?? file;
     if (!liveFile || !patientData.patientId) {
       alert("Missing image or patient ID");
@@ -79,7 +82,6 @@ function PredictionForm() {
     if (fileInputRef.current) fileInputRef.current.disabled = true;
 
     try {
-      // create stable copy
       const stableFile = new File([liveFile], liveFile.name, { type: liveFile.type });
 
       const formData = new FormData();
@@ -110,7 +112,6 @@ function PredictionForm() {
       });
     } catch (err) {
       console.error('Explanation failed', err);
-      // show a friendlier message but include some diagnostic info
       alert('Failed to fetch analysis: ' + (err.message || err));
     } finally {
       setAnalysisLoading(false);
@@ -119,243 +120,268 @@ function PredictionForm() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4">
-      {/* Modern Header with Medical Theme */}
-      <div className="w-full max-w-4xl mb-8 text-center animate-fade-in">
-        <div className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-2xl bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-500 shadow-lg shadow-cyan-500/30 transform hover:scale-105 transition-transform duration-300">
-          <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white">
+      {/* Left Panel - Branding & Visuals */}
+      <div className="w-full lg:w-[45%] bg-slate-900 relative overflow-hidden flex flex-col justify-between p-8 lg:p-16 text-white">
+        {/* Abstract Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <path d="M0 0 L100 0 L100 100 L0 100 Z" fill="url(#grad1)" />
+            <defs>
+              <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0891B2', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#0F172A', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
           </svg>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-3 tracking-tight">
-          Pneumonia <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-teal-600">Detection AI</span>
-        </h1>
-        <p className="text-slate-500 text-lg font-medium max-w-2xl mx-auto">
-          Advanced chest X-ray analysis powered by explainable artificial intelligence
-        </p>
-      </div>
 
-      {/* Main Form Card with Enhanced Design */}
-      <div className="w-full max-w-3xl animate-slide-up delay-100">
-        <div className="medical-card p-8 md:p-12 shadow-xl border border-slate-100 bg-white/80 backdrop-blur-xl">
-          <div className="mb-8 pb-6 border-b border-slate-100">
-            <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-3">
-              <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-cyan-100 text-cyan-600 text-lg">👤</span>
-              Patient Information
-            </h2>
-            <p className="text-slate-500 text-sm mt-2 ml-11">Please enter the patient's details and upload their X-ray scan.</p>
+        {/* Content */}
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-3 mb-8">
+            <div className="p-2.5 bg-cyan-500/10 rounded-lg border border-cyan-500/20 backdrop-blur-sm">
+              <Activity className="w-6 h-6 text-cyan-400" />
+            </div>
+            <span className="text-lg font-semibold tracking-wide text-cyan-100/90">MED-AI DIAGNOSTICS</span>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Patient Name & ID Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">
-                  Patient Name
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="patientName"
-                    value={patientData.patientName}
-                    onChange={handleInputChange}
-                    placeholder="John Doe"
-                    className="w-full pl-4 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
-                    required
-                  />
-                </div>
-              </div>
+          <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
+            Advanced <span className="text-cyan-400">Pneumonia</span> Detection
+          </h1>
 
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">
-                  Patient ID
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="patientId"
-                    value={patientData.patientId}
-                    onChange={handleInputChange}
-                    placeholder="ID-12345"
-                    className="w-full pl-4 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
-                    required
-                  />
-                </div>
-              </div>
+          <p className="text-lg text-slate-300 leading-relaxed max-w-md">
+            Powered by state-of-the-art explainable AI to provide accurate, transparent, and rapid chest X-ray analysis for medical professionals.
+          </p>
+        </div>
+
+        {/* Trust Indicators */}
+        <div className="relative z-10 mt-12 space-y-6">
+          <div className="flex items-center gap-4 text-slate-300">
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+              <BrainCircuit className="w-5 h-5 text-cyan-400" />
             </div>
+            <div>
+              <p className="font-medium text-white">XAI Powered Analysis</p>
+              <p className="text-sm opacity-70">GradCAM, LIME & Occlusion maps</p>
+            </div>
+          </div>
 
-            {/* Age and Gender Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">
-                  Age
-                </label>
-                <input
-                  type="number"
-                  name="patientAge"
-                  value={patientData.patientAge}
-                  onChange={handleInputChange}
-                  placeholder="Years"
-                  className="w-full pl-4 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
-                  required
-                />
-              </div>
+          <div className="flex items-center gap-4 text-slate-300">
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <p className="font-medium text-white">Secure Environment</p>
+              <p className="text-sm opacity-70">HIPAA compliant data processing</p>
+            </div>
+          </div>
 
-              <div className="group">
-                <label className="block text-sm font-semibold text-slate-700 mb-2 ml-1">
-                  Gender
-                </label>
-                <div className="relative">
-                  <select
-                    name="patientGender"
-                    value={patientData.patientGender}
-                    onChange={handleInputChange}
-                    className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-200 outline-none text-slate-800 appearance-none cursor-pointer"
-                    required
+          <div className="flex items-center gap-4 text-slate-300">
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700">
+              <Stethoscope className="w-5 h-5 text-purple-400" />
+            </div>
+            <div>
+              <p className="font-medium text-white">Clinical Grade</p>
+              <p className="text-sm opacity-70">Optimized for medical workflows</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-12 pt-8 border-t border-slate-800">
+          <p className="text-xs text-slate-500">© 2025 MedAI Systems Inc. All rights reserved.</p>
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-[55%] h-full min-h-screen overflow-y-auto bg-slate-50 flex flex-col items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-xl !p-8">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900">Patient Diagnosis</h2>
+            <p className="text-slate-500 mt-1">Enter patient details and upload scan to begin analysis</p>
+          </div>
+
+          <Card className="shadow-none border-0 bg-transparent sm:bg-white sm:shadow-sm sm:border !p-4 sm:border-slate-200">
+            <CardContent className="p-10 sm:p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Patient Name & ID */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientName" className="text-sm  font-medium text-slate-700">Patient Name</Label>
+                    <Input
+                      id="patientName"
+                      name="patientName"
+                      value={patientData.patientName}
+                      onChange={handleInputChange}
+                      placeholder="e.g. John Doe"
+                      className="h-12 bg-white border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="patientId" className="text-sm font-medium text-slate-700">Patient ID</Label>
+                    <Input
+                      id="patientId"
+                      name="patientId"
+                      value={patientData.patientId}
+                      onChange={handleInputChange}
+                      placeholder="e.g. PID-88392"
+                      className="h-12 bg-white border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Age & Gender */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="patientAge" className="text-sm font-medium text-slate-700">Age</Label>
+                    <Input
+                      id="patientAge"
+                      name="patientAge"
+                      type="number"
+                      value={patientData.patientAge}
+                      onChange={handleInputChange}
+                      placeholder="Years"
+                      className="h-12 bg-white border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="patientGender" className="text-sm font-medium text-slate-700">Gender</Label>
+                    <Select
+                      id="patientGender"
+                      name="patientGender"
+                      value={patientData.patientGender}
+                      onChange={handleInputChange}
+                      className="h-12 bg-white border-slate-200 focus:border-cyan-500 focus:ring-cyan-500/20 transition-all"
+                      required
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* File Upload Zone */}
+                <div className="space-y-2 pt-2">
+                  <Label className="text-sm font-medium text-slate-700">Chest X-Ray Scan</Label>
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 ease-in-out group ${file
+                      ? 'border-emerald-500 bg-emerald-50/30'
+                      : 'border-slate-300 hover:border-cyan-500 hover:bg-cyan-50/30 bg-white'
+                      }`}
                   >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
+                    <input
+                      id="xray-upload"
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                      required
+                      disabled={loading || analysisLoading}
+                    />
 
-            {/* File Upload - Enhanced */}
-            <div className="group pt-2">
-              <label className="block text-sm font-semibold text-slate-700 mb-3 ml-1">
-                Chest X-Ray Scan
-              </label>
-              <div
-                className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 ease-in-out group-hover:border-cyan-400 ${file ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-300 hover:bg-slate-50/50'
-                  }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  required
-                  disabled={loading || analysisLoading}
-                />
-                <div className="text-center pointer-events-none">
-                  {!file ? (
-                    <div className="flex flex-col items-center">
-                      <div className="w-16 h-16 mb-4 rounded-full bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                      </div>
-                      <p className="text-base font-semibold text-slate-700">Click to upload or drag and drop</p>
-                      <p className="text-sm text-slate-400 mt-1">SVG, PNG, JPG or GIF (max. 10MB)</p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-slate-800">{file.name}</p>
-                        <p className="text-sm text-emerald-600 font-medium">Ready for analysis</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Submit Button - Enhanced */}
-            <button
-              type="submit"
-              disabled={!file || loading || analysisLoading}
-              className={`w-full py-5 px-8 rounded-xl font-bold text-white text-xl shadow-2xl transition-all duration-300 btn-medical relative overflow-hidden ${loading || !file
-                  ? 'bg-slate-400 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-cyan-600 via-teal-600 to-emerald-600 hover:shadow-cyan-500/50 hover:scale-[1.02] active:scale-[0.98] hover:-translate-y-1'
-                }`}
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-3">
-                  <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Analyzing X-Ray...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-3">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                  </svg>
-                  Run AI Diagnosis
-                </span>
-              )}
-            </button>
-          </form>
-
-          {/* Results Display - Enhanced */}
-          {result && (
-            <div className="mt-8 pt-8 border-t border-slate-100 animate-fade-in">
-              <div className="rounded-2xl bg-slate-50 p-6 border border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-700 mb-4 text-center">Analysis Result</h3>
-
-                <div className="flex justify-center mb-6">
-                  <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-xl shadow-sm border ${result.label === 'NORMAL'
-                      ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                      : 'bg-rose-50 border-rose-100 text-rose-700'
-                    }`}>
-                    <span className="text-2xl">{result.label === 'NORMAL' ? '✅' : '⚠️'}</span>
-                    <div className="text-left">
-                      <div className="font-bold text-lg leading-tight">{result.label}</div>
-                      <div className="text-xs opacity-80 font-medium">
-                        {result.confidence}% Confidence
-                      </div>
+                    <div className="text-center pointer-events-none relative z-10">
+                      {!file ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 group-hover:bg-cyan-100 group-hover:text-cyan-600 flex items-center justify-center transition-colors duration-300">
+                            <Upload className="w-7 h-7" strokeWidth={2} />
+                          </div>
+                          <div>
+                            <p className="text-base font-semibold text-slate-700 group-hover:text-cyan-700 transition-colors">
+                              Click to upload or drag & drop
+                            </p>
+                            <p className="text-sm text-slate-400 mt-1">
+                              Supports PNG, JPG, JPEG (max 10MB)
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-sm">
+                            <FileCheck2 className="w-6 h-6" strokeWidth={2} />
+                          </div>
+                          <div className="text-left">
+                            <p className="font-semibold text-slate-900 text-base truncate max-w-[200px]">{file.name}</p>
+                            <p className="text-sm text-emerald-600 font-medium">Ready for analysis</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={handleAnalysisClick}
-                  disabled={analysisLoading || loading}
-                  className="w-full py-3.5 px-6 rounded-xl font-semibold text-white bg-slate-800 hover:bg-slate-900 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-slate-800/20"
+                {/* Submit Button */}
+                <Button
+                  type="submit"
+                  disabled={!file || loading || analysisLoading}
+                  className="w-full h-14 text-base font-semibold bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20 rounded-xl transition-all duration-300 transform hover:-translate-y-0.5"
                 >
-                  {analysisLoading ? (
-                    <>
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      <span>Analyzing...</span>
-                    </>
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing Scan...
+                    </span>
                   ) : (
-                    <>
-                      <span>View Detailed Analysis</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                      </svg>
-                    </>
+                    <span className="flex items-center justify-center gap-2">
+                      <Activity className="w-5 h-5" />
+                      Run AI Diagnosis
+                    </span>
                   )}
-                </button>
-              </div>
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Results Section */}
+          {result && (
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <Card className="bg-white border-slate-200 overflow-hidden shadow-lg shadow-slate-200/50">
+                <div className={`h-2 w-full ${result.label === 'NORMAL' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500 uppercase tracking-wider">Diagnosis Result</p>
+                      <h3 className={`text-2xl font-bold mt-1 ${result.label === 'NORMAL' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                        {result.label}
+                      </h3>
+                    </div>
+                    <Badge
+                      className={`px-4 py-1.5 text-sm font-semibold rounded-full ${result.label === 'NORMAL'
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+                        : 'bg-rose-100 text-rose-700 border-rose-200'
+                        }`}
+                    >
+                      {result.confidence}% Confidence
+                    </Badge>
+                  </div>
+
+                  <Button
+                    onClick={handleAnalysisClick}
+                    disabled={analysisLoading || loading}
+                    variant="outline"
+                    className="w-full h-12 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  >
+                    {analysisLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating Visualization...
+                      </span>
+                    ) : (
+                      <span className="flex items-center justify-between w-full px-2">
+                        View Detailed Analysis
+                        <ChevronRight className="w-4 h-4" />
+                      </span>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="w-full max-w-3xl mt-8 text-center animate-fade-in delay-200">
-        <p className="text-slate-400 text-sm font-medium flex items-center justify-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-          Secure Medical Analysis Environment
-        </p>
       </div>
     </div>
   );

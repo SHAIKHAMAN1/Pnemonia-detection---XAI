@@ -3,6 +3,24 @@
 /* Import Healthcare-themed Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
 
+/* shadcn UI Theme Variables */
+@theme {
+  --color-primary: oklch(60% 0.2 210);
+  --color-primary-foreground: oklch(98% 0.02 210);
+  --color-secondary: oklch(96.1% 0.02 210);
+  --color-secondary-foreground: oklch(20% 0.05 222.2);
+  --color-muted: oklch(96.1% 0.02 210);
+  --color-muted-foreground: oklch(46.9% 0.05 215.4);
+  --color-accent: oklch(96.1% 0.02 210);
+  --color-accent-foreground: oklch(20% 0.05 222.2);
+  --color-destructive: oklch(60.2% 0.2 0);
+  --color-destructive-foreground: oklch(98% 0.02 210);
+  --color-border: oklch(91.4% 0.02 214.3);
+  --color-input: oklch(91.4% 0.02 214.3);
+  --color-ring: oklch(60% 0.2 210);
+  --radius: 0.75rem;
+}
+
 /* Healthcare Color Palette & Custom Variables */
 :root {
   /* Primary Medical Colors */
@@ -42,31 +60,6 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  position: relative;
-  overflow-x: hidden;
-}
-
-/* Medical Icon Pattern Background */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  opacity: 0.08;
-  background-image:
-    url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='5' y='35' font-size='30' fill='%230891B2'%3E⚕️%3C/text%3E%3Ctext x='65' y='35' font-size='26' fill='%230F766E'%3E🫁%3C/text%3E%3Ctext x='5' y='85' font-size='26' fill='%23059669'%3E💊%3C/text%3E%3Ctext x='65' y='85' font-size='26' fill='%230891B2'%3E🩺%3C/text%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 240px 240px;
-  pointer-events: none;
-}
-
-/* Ensure content is above the pattern */
-body>* {
-  position: relative;
-  z-index: 1;
 }
 
 h1,
@@ -194,18 +187,6 @@ img[loading] {
 }
 
 /* Custom Animations */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -216,22 +197,32 @@ img[loading] {
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.8s ease-out forwards;
+.animate-in {
+  animation-duration: 0.5s;
+  animation-fill-mode: forwards;
+  animation-timing-function: ease-out;
 }
 
-.delay-100 {
-  animation-delay: 100ms;
+.fade-in {
+  animation-name: fadeIn;
 }
 
-.delay-200 {
-  animation-delay: 200ms;
+.slide-in-from-bottom-4 {
+  animation-name: slideInFromBottom;
 }
 
-.delay-300 {
-  animation-delay: 300ms;
+.delay-500 {
+  animation-delay: 500ms;
 }
