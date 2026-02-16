@@ -3,7 +3,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
-function XaiReportPage({ report, generatedAt, isLoading, errorMessage, onBackToPrediction, onBackToForm, onRetry }) {
+function XaiReportPage({ report, generatedAt, isLoading, errorMessage, onBackToPrediction, onBackToForm, onOpenHistory, onRetry }) {
   const xaiImages = [
     { key: 'gradcam', label: 'Grad-CAM', src: report.gradcam },
     { key: 'lime', label: 'LIME', src: report.lime },
@@ -36,6 +36,7 @@ function XaiReportPage({ report, generatedAt, isLoading, errorMessage, onBackToP
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={onBackToPrediction}>Back to Prediction</Button>
+            <Button variant="secondary" onClick={() => onOpenHistory(report.patientId)}>Patient History</Button>
             <Button variant="ghost" className="gap-2" onClick={onBackToForm}>
               <ArrowLeft className="h-4 w-4" />
               Back to Form

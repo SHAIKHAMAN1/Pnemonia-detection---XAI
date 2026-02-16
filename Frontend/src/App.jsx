@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import AnalysisPage from './pages/AnalysisPage'
+import PatientHistoryPage from './pages/PatientHistoryPage'
 import PredictionForm from './pages/PredictionForm'
 import XaiReportPage from './pages/XaiReportPage'
-import { explainDiagnosis, predictDiagnosis } from './lib/api'
+import { explainDiagnosis, fetchPatientHistory, predictDiagnosis } from './lib/api'
 
 const defaultReport = {
   patientName: 'Unknown',
@@ -25,6 +26,11 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState('')
   const [lastPayload, setLastPayload] = useState(null)
+  const [historyReports, setHistoryReports] = useState([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
+  const [historyPatientId, setHistoryPatientId] = useState('')
+  const [historyReturnPage, setHistoryReturnPage] = useState('form')
 
   const generatedAt = useMemo(() => new Date().toLocaleString(), [currentPage])
 
@@ -105,11 +111,37 @@ function App() {
     setCurrentPage('analysis')
   }
 
+  const handleOpenHistory = async (patientId = '') => {
+    if (currentPage !== 'history') {
+      setHistoryReturnPage(currentPage)
+    }
+    setHistoryPatientId(patientId || '')
+    setHistoryError('')
+    setCurrentPage('history')
+    setHistoryLoading(true)
+
+    try {
+      const result = await fetchPatientHistory(patientId)
+      setHistoryReports(result?.reports || [])
+    } catch (error) {
+      setHistoryError(error.message || 'Failed to fetch patient history')
+      setHistoryReports([])
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
+
+  const handleBackFromHistory = () => {
+    setHistoryError('')
+    setCurrentPage(historyReturnPage === 'history' ? 'form' : historyReturnPage)
+  }
+
   return (
     <main className="min-h-screen bg-slate-100">
       {currentPage === 'form' ? (
         <PredictionForm
           onRunDiagnosis={handleDiagnosis}
+          onOpenHistory={handleOpenHistory}
           isLoading={isLoading}
           errorMessage={formError}
         />
@@ -121,6 +153,7 @@ function App() {
           generatedAt={generatedAt}
           onBack={handleBack}
           onOpenReport={handleOpenReport}
+          onOpenHistory={handleOpenHistory}
           isLoading={isLoading}
           errorMessage={formError}
         />
@@ -135,6 +168,18 @@ function App() {
           onRetry={handleOpenReport}
           onBackToPrediction={handleBackToPrediction}
           onBackToForm={handleBack}
+          onOpenHistory={handleOpenHistory}
+        />
+      ) : null}
+
+      {currentPage === 'history' ? (
+        <PatientHistoryPage
+          reports={historyReports}
+          isLoading={historyLoading}
+          errorMessage={historyError}
+          initialPatientId={historyPatientId}
+          onSearch={handleOpenHistory}
+          onBack={handleBackFromHistory}
         />
       ) : null}
     </main>

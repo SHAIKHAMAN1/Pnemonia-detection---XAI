@@ -11,7 +11,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
-function AnalysisPage({ report, generatedAt, onBack, onOpenReport, isLoading, errorMessage }) {
+function AnalysisPage({ report, generatedAt, onBack, onOpenReport, onOpenHistory, isLoading, errorMessage }) {
   const highRisk = report.confidence >= 90
 
   return (
@@ -45,6 +45,9 @@ function AnalysisPage({ report, generatedAt, onBack, onOpenReport, isLoading, er
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={onOpenReport} disabled={isLoading}>
               {isLoading ? 'Generating...' : 'Open XAI Report'}
+            </Button>
+            <Button variant="secondary" onClick={() => onOpenHistory(report.patientId)} disabled={isLoading}>
+              Patient History
             </Button>
             <Button variant="ghost" className="gap-2" onClick={onBack}>
               <ArrowLeft className="h-4 w-4" />

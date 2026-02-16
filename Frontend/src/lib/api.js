@@ -45,3 +45,15 @@ export async function explainDiagnosis(payload) {
   return parseJsonResponse(response)
 }
 
+export async function fetchPatientHistory(patientId = '') {
+  const query = new URLSearchParams()
+  if (patientId) {
+    query.set('patientId', patientId)
+  }
+
+  const queryString = query.toString()
+  const endpoint = queryString ? `/patients/history?${queryString}` : '/patients/history'
+  const response = await fetch(`${API_BASE_URL}${endpoint}`)
+
+  return parseJsonResponse(response)
+}

@@ -14,7 +14,7 @@ const genderOptions = [
   { label: 'Other', value: 'Other' },
 ]
 
-function PredictionForm({ onRunDiagnosis, isLoading, errorMessage }) {
+function PredictionForm({ onRunDiagnosis, onOpenHistory, isLoading, errorMessage }) {
   const [patientName, setPatientName] = useState('za')
   const [patientId, setPatientId] = useState('PID-111')
   const [age, setAge] = useState('21')
@@ -138,6 +138,9 @@ function PredictionForm({ onRunDiagnosis, isLoading, errorMessage }) {
           <div className="grid gap-3 pt-1">
             <Button onClick={() => onRunDiagnosis(payload)} disabled={!canSubmit || isLoading}>
               {isLoading ? 'Running...' : 'Run Diagnosis'}
+            </Button>
+            <Button variant="secondary" onClick={() => onOpenHistory(patientId)} disabled={isLoading}>
+              View Patient History
             </Button>
             <p className="text-center text-xs text-slate-500">After prediction, open XAI report from the analysis page.</p>
           </div>
