@@ -1,0 +1,9 @@
+flask
+flask-cors
+tensorflow
+numpy
+matplotlib
+opencv-python
+lime
+scikit-image
+werkzeug
