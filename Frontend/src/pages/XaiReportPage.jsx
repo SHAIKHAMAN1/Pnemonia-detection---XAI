@@ -3,12 +3,25 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 
-function XaiReportPage({ report, generatedAt, isLoading, errorMessage, onBackToPrediction, onBackToForm, onOpenHistory, onRetry }) {
+function XaiReportPage({
+  report,
+  generatedAt,
+  isLoading,
+  xaiProgress = 0,
+  xaiStage = 'Preparing...',
+  totalXaiSteps = 500,
+  errorMessage,
+  onBackToPrediction,
+  onBackToForm,
+  onOpenHistory,
+  onRetry,
+}) {
   const xaiImages = [
     { key: 'gradcam', label: 'Grad-CAM', src: report.gradcam },
     { key: 'lime', label: 'LIME', src: report.lime },
     { key: 'occlusion', label: 'Occlusion', src: report.occlusion },
   ]
+  const completedSteps = Math.round((xaiProgress / 100) * totalXaiSteps)
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -49,7 +62,18 @@ function XaiReportPage({ report, generatedAt, isLoading, errorMessage, onBackToP
             <div className="flex min-h-52 flex-col items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50">
               <Loader2 className="h-8 w-8 animate-spin text-sky-600" />
               <p className="text-sm font-medium text-slate-700">Generating XAI report...</p>
-              <p className="text-xs text-slate-500">Waiting for backend `/explain` response.</p>
+              <p className="text-xs text-slate-500">{xaiStage}</p>
+              <div className="w-full max-w-md px-3">
+                <div className="mb-1 flex items-center justify-between text-xs text-slate-600">
+                  <span>{completedSteps}/{totalXaiSteps}</span>
+                  <span>{Math.round(xaiProgress)}%</span>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div className="h-full rounded-full bg-sky-600 transition-all duration-300" style={{ width: `${xaiProgress}%` }} />
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-sky-700">Progress: {Math.round(xaiProgress)}%</p>
+              <p className="text-center text-xs text-slate-500">Backend warnings may appear in terminal while this runs.</p>
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-3">

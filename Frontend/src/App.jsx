@@ -31,6 +31,11 @@ function App() {
   const [historyError, setHistoryError] = useState('')
   const [historyPatientId, setHistoryPatientId] = useState('')
   const [historyReturnPage, setHistoryReturnPage] = useState('form')
+  const [isXaiLoading, setIsXaiLoading] = useState(false)
+  const [xaiProgress, setXaiProgress] = useState(0)
+  const [xaiStage, setXaiStage] = useState('Idle')
+
+  const totalXaiSteps = 500
 
   const generatedAt = useMemo(() => new Date().toLocaleString(), [currentPage])
 
@@ -76,7 +81,25 @@ function App() {
 
     setCurrentPage('xai')
     setIsLoading(true)
+    setIsXaiLoading(true)
     setFormError('')
+    setXaiProgress(2)
+    setXaiStage('Preparing image...')
+    const startedAt = Date.now()
+
+    const intervalId = setInterval(() => {
+      setXaiProgress((prev) => {
+        const next = Math.min(prev + Math.floor(Math.random() * 5 + 2), 95)
+
+        if (next < 25) setXaiStage('Preprocessing X-ray...')
+        else if (next < 55) setXaiStage('Running Grad-CAM...')
+        else if (next < 80) setXaiStage('Running LIME...')
+        else if (next < 95) setXaiStage('Running Occlusion...')
+        else setXaiStage('Finalizing report...')
+
+        return next
+      })
+    }, 4500)
 
     try {
       const explainResult = await explainDiagnosis(lastPayload)
@@ -94,10 +117,20 @@ function App() {
         lime: explainResult?.lime || '',
         occlusion: explainResult?.occlusion || '',
       }))
+      setXaiProgress(100)
+      setXaiStage('XAI report ready')
     } catch (error) {
       setFormError(error.message || 'Failed to generate explanation report')
+      setXaiStage('XAI generation failed')
     } finally {
+      clearInterval(intervalId)
+      const elapsed = Date.now() - startedAt
+      const minVisibleMs = 1500
+      if (elapsed < minVisibleMs) {
+        await new Promise((resolve) => setTimeout(resolve, minVisibleMs - elapsed))
+      }
       setIsLoading(false)
+      setIsXaiLoading(false)
     }
   }
 
@@ -163,7 +196,10 @@ function App() {
         <XaiReportPage
           report={report}
           generatedAt={generatedAt}
-          isLoading={isLoading}
+          isLoading={isXaiLoading}
+          xaiProgress={xaiProgress}
+          xaiStage={xaiStage}
+          totalXaiSteps={totalXaiSteps}
           errorMessage={formError}
           onRetry={handleOpenReport}
           onBackToPrediction={handleBackToPrediction}
