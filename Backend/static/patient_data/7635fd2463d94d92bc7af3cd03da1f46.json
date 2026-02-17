@@ -1,0 +1,16 @@
+{
+    "reportId": "7635fd2463d94d92bc7af3cd03da1f46",
+    "patientName": "za",
+    "patientId": "PID-111",
+    "patientAge": "21",
+    "patientGender": "Male",
+    "imageFilename": "person1951_bacteria_4882_4dd05cb414ba4d0389a8c3360ec21c0b.jpeg",
+    "createdAt": "2026-02-17T08:17:09.405432",
+    "updatedAt": "2026-02-17T08:17:10.068029",
+    "prediction": {
+        "label": "Pneumonia",
+        "confidence": 99.42,
+        "predictedAt": "2026-02-17T08:17:10.068029"
+    },
+    "xai": {}
+}

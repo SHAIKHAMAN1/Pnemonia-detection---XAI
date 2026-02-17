@@ -1,0 +1,21 @@
+{
+    "reportId": "ed6e151beec8446b84ac016a39c3e99b",
+    "patientName": "narru",
+    "patientId": "PID-04",
+    "patientAge": "21",
+    "patientGender": "Male",
+    "imageFilename": "person1954_bacteria_4886_b22baa3a727244d68cf6a13034ce869e.jpeg",
+    "createdAt": "2026-02-17T08:12:50.962047",
+    "updatedAt": "2026-02-17T08:15:55.052786",
+    "prediction": {
+        "label": "PNEUMONIA",
+        "confidence": 89.32,
+        "predictedAt": "2026-02-17T08:12:51.935668"
+    },
+    "xai": {
+        "gradcam": "http://localhost:5000/static/explanations/PID-04/gradcam.png",
+        "lime": "http://localhost:5000/static/explanations/PID-04/lime.png",
+        "occlusion": "http://localhost:5000/static/explanations/PID-04/occlusion.png",
+        "generatedAt": "2026-02-17T08:15:55.052786"
+    }
+}

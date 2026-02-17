@@ -1,0 +1,21 @@
+{
+    "reportId": "f4beedde44c644d49d2c139473135297",
+    "patientName": "Asad",
+    "patientId": "PID-02",
+    "patientAge": "23",
+    "patientGender": "Male",
+    "imageFilename": "person1947_bacteria_4876_4a549728c50342b09879729e822bdfd8.jpeg",
+    "createdAt": "2026-02-17T08:03:26.769571",
+    "updatedAt": "2026-02-17T08:08:35.357229",
+    "prediction": {
+        "label": "PNEUMONIA",
+        "confidence": 90.08,
+        "predictedAt": "2026-02-17T08:03:27.728973"
+    },
+    "xai": {
+        "gradcam": "http://localhost:5000/static/explanations/PID-02/gradcam.png",
+        "lime": "http://localhost:5000/static/explanations/PID-02/lime.png",
+        "occlusion": "http://localhost:5000/static/explanations/PID-02/occlusion.png",
+        "generatedAt": "2026-02-17T08:08:35.357229"
+    }
+}

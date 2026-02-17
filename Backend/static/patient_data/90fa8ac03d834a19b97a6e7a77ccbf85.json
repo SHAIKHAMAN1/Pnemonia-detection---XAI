@@ -1,0 +1,21 @@
+{
+    "reportId": "90fa8ac03d834a19b97a6e7a77ccbf85",
+    "patientName": "za",
+    "patientId": "PID-111",
+    "patientAge": "21",
+    "patientGender": "Male",
+    "imageFilename": "NORMAL2-IM-1438-0001_7717f22683a441fc958f69da80f144a2.jpeg",
+    "createdAt": "2026-02-16T19:11:19.191724",
+    "updatedAt": "2026-02-16T19:14:34.250810",
+    "prediction": {
+        "label": "NORMAL",
+        "confidence": 54.13,
+        "predictedAt": "2026-02-16T19:11:20.726095"
+    },
+    "xai": {
+        "gradcam": "http://localhost:5000/static/explanations/PID-111/gradcam.png",
+        "lime": "http://localhost:5000/static/explanations/PID-111/lime.png",
+        "occlusion": "http://localhost:5000/static/explanations/PID-111/occlusion.png",
+        "generatedAt": "2026-02-16T19:14:34.250810"
+    }
+}

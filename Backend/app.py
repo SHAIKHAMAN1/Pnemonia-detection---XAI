@@ -96,12 +96,11 @@
 
 
 
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, current_app
 import os
 import json
 from datetime import datetime
 from flask_cors import CORS
-from flask import url_for
 from werkzeug.utils import secure_filename
 from model.predict import predict_diagnosis
 from model.explainers import generate_explanations
@@ -127,6 +126,12 @@ CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
 # app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
 
 
+def _ensure_storage_dirs():
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(PATIENT_FOLDER, exist_ok=True)
+    os.makedirs(EXPLANATIONS_FOLDER, exist_ok=True)
+
+
 def _save_upload_file(file_storage):
     """Sanitize filename, add uuid suffix, save file, and return filename & path."""
     orig = secure_filename(file_storage.filename)
@@ -139,10 +144,139 @@ def _save_upload_file(file_storage):
     return unique_name, path
 
 
-def _make_public_url(path_relative):
-    # If you return absolute URLs, frontend doesn't have to join
-    # request.host_url includes trailing slash; remove extra slashes properly
-    return request.host_url.rstrip('/') + '/' + path_relative.lstrip('/')
+def _report_file_path(report_id):
+    return os.path.join(PATIENT_FOLDER, f"{report_id}.json")
+
+
+def _write_json(path, payload):
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=4)
+
+
+def _read_json(path):
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _to_static_explanation_url(path):
+    rel = path.replace("\\", "/").lstrip("/")
+    if rel.startswith("static/"):
+        rel = rel[len("static/"):]
+    return url_for("static", filename=rel, _external=True)
+
+
+def _infer_xai_urls_from_patient_id(patient_id):
+    if not patient_id:
+        return {}
+
+    explanation_dir = os.path.join(EXPLANATIONS_FOLDER, str(patient_id))
+    if not os.path.isdir(explanation_dir):
+        return {}
+
+    candidates = {
+        "gradcam": os.path.join(explanation_dir, "gradcam.png"),
+        "lime": os.path.join(explanation_dir, "lime.png"),
+        "occlusion": os.path.join(explanation_dir, "occlusion.png"),
+    }
+
+    resolved = {}
+    for key, file_path in candidates.items():
+        if os.path.isfile(file_path):
+            resolved[key] = _to_static_explanation_url(file_path)
+    return resolved
+
+
+def _normalize_report(data, fallback_report_id=""):
+    prediction = data.get("prediction", {}) if isinstance(data.get("prediction"), dict) else {}
+    xai = data.get("xai", {}) if isinstance(data.get("xai"), dict) else {}
+    patient_age = data.get("patientAge")
+    confidence = prediction.get("confidence", data.get("confidence", 0))
+
+    try:
+        confidence = float(confidence)
+    except (TypeError, ValueError):
+        confidence = 0
+
+    patient_id = data.get("patientId") or data.get("patient_id")
+    inferred_xai = _infer_xai_urls_from_patient_id(patient_id)
+
+    record = {
+        "reportId": data.get("reportId") or fallback_report_id,
+        "patientName": data.get("patientName"),
+        "patientId": patient_id,
+        "patientAge": patient_age,
+        "patientGender": data.get("patientGender"),
+        "imageFilename": data.get("imageFilename"),
+        "createdAt": data.get("createdAt") or data.get("timestamp"),
+        "updatedAt": data.get("updatedAt") or data.get("timestamp"),
+        "diagnosis": prediction.get("label", data.get("diagnosis")),
+        "confidence": round(confidence, 2),
+        "gradcam": xai.get("gradcam", data.get("gradcam")) or inferred_xai.get("gradcam"),
+        "lime": xai.get("lime", data.get("lime")) or inferred_xai.get("lime"),
+        "occlusion": xai.get("occlusion", data.get("occlusion")) or inferred_xai.get("occlusion"),
+    }
+
+    image_filename = record.get("imageFilename")
+    if image_filename:
+        record["sourceImageUrl"] = url_for("static", filename=f"uploads/{image_filename}", _external=True)
+    else:
+        record["sourceImageUrl"] = ""
+
+    return record
+
+
+def _load_reports():
+    _ensure_storage_dirs()
+    reports = []
+    try:
+        entries = os.listdir(PATIENT_FOLDER)
+    except FileNotFoundError:
+        current_app.logger.warning("Patient folder missing, returning empty history: %s", PATIENT_FOLDER)
+        return reports
+
+    for entry in entries:
+        if not entry.endswith(".json"):
+            continue
+        path = os.path.join(PATIENT_FOLDER, entry)
+        try:
+            payload = _read_json(path)
+            report_id = os.path.splitext(entry)[0]
+            reports.append(_normalize_report(payload, report_id))
+        except Exception:
+            current_app.logger.exception("Failed to parse report file: %s", path)
+    return reports
+
+
+def _find_latest_report_file(patient_id):
+    _ensure_storage_dirs()
+    latest_path = ""
+    latest_time = ""
+
+    try:
+        entries = os.listdir(PATIENT_FOLDER)
+    except FileNotFoundError:
+        current_app.logger.warning("Patient folder missing while resolving latest report: %s", PATIENT_FOLDER)
+        return latest_path
+
+    for entry in entries:
+        if not entry.endswith(".json"):
+            continue
+        path = os.path.join(PATIENT_FOLDER, entry)
+        try:
+            payload = _read_json(path)
+        except Exception:
+            continue
+
+        candidate_patient_id = payload.get("patientId") or payload.get("patient_id")
+        if candidate_patient_id != patient_id:
+            continue
+
+        timestamp = payload.get("updatedAt") or payload.get("createdAt") or payload.get("timestamp") or ""
+        if timestamp >= latest_time:
+            latest_time = timestamp
+            latest_path = path
+
+    return latest_path
 
 
 # ==== /predict: Basic prediction only ====
@@ -167,11 +301,24 @@ def predict():
         "timestamp": datetime.now().isoformat()
     }
 
-    # Save metadata as JSON
-    json_path = os.path.join(PATIENT_FOLDER, f"{filename}.json")
+    created_at = datetime.now().isoformat()
+    report_id = uuid.uuid4().hex
+    report_data = {
+        "reportId": report_id,
+        "patientName": patient_info["patientName"],
+        "patientId": patient_info["patientId"],
+        "patientAge": patient_info["patientAge"],
+        "patientGender": patient_info["patientGender"],
+        "imageFilename": filename,
+        "createdAt": created_at,
+        "updatedAt": created_at,
+        "prediction": {},
+        "xai": {},
+    }
+
+    report_path = _report_file_path(report_id)
     try:
-        with open(json_path, 'w') as f:
-            json.dump(patient_info, f, indent=4)
+        _write_json(report_path, report_data)
     except Exception as e:
         app.logger.exception("Failed to write patient JSON: %s", e)
 
@@ -182,10 +329,23 @@ def predict():
         app.logger.exception("Prediction error: %s", e)
         return jsonify({'error': 'Prediction failed', 'detail': str(e)}), 500
 
+    report_data["prediction"] = {
+        "label": result.get("label"),
+        "confidence": result.get("confidence"),
+        "predictedAt": datetime.now().isoformat(),
+    }
+    report_data["updatedAt"] = datetime.now().isoformat()
+
+    try:
+        _write_json(report_path, report_data)
+    except Exception:
+        app.logger.exception("Failed to update report after prediction: %s", report_path)
+
     return jsonify({
         "label": result.get("label"),
         "confidence": result.get("confidence"),
-        "patientInfo": patient_info
+        "patientInfo": patient_info,
+        "reportId": report_id,
     })
 
 
@@ -222,8 +382,6 @@ def predict():
 #         app.logger.exception("Explanation pipeline failed: %s", e)
 #         return jsonify({'error': 'Explanation failed', 'detail': str(e)}), 500
 
-
-from flask import current_app
 
 @app.route('/explain', methods=['POST'])
 def explain():
@@ -292,6 +450,29 @@ def explain():
                     current_app.logger.debug("Checking exists -> %s : %s", p, os.path.exists(p))
         except Exception:
             current_app.logger.exception("Error while checking generated files")
+
+        report_path = _find_latest_report_file(patient_id)
+        if report_path:
+            try:
+                report_payload = _read_json(report_path)
+                report_payload["xai"] = {
+                    "gradcam": gradcam_url,
+                    "lime": lime_url,
+                    "occlusion": occlusion_url,
+                    "generatedAt": datetime.now().isoformat(),
+                }
+                if xai_result.get("label") is not None:
+                    if not isinstance(report_payload.get("prediction"), dict):
+                        report_payload["prediction"] = {}
+                    report_payload["prediction"]["label"] = xai_result.get("label")
+                if xai_result.get("confidence") is not None:
+                    if not isinstance(report_payload.get("prediction"), dict):
+                        report_payload["prediction"] = {}
+                    report_payload["prediction"]["confidence"] = xai_result.get("confidence")
+                report_payload["updatedAt"] = datetime.now().isoformat()
+                _write_json(report_path, report_payload)
+            except Exception:
+                current_app.logger.exception("Failed to update report with XAI: %s", report_path)
 
         # Return the JSON
         return jsonify({
@@ -362,6 +543,23 @@ def _resolve_img_path(img_value):
 
     # Use url_for to build the public URL (produces forward slashes)
     return url_for('static', filename=rel, _external=True)
+
+
+@app.route('/patients/history', methods=['GET'])
+def get_patients_history():
+    _ensure_storage_dirs()
+    requested_patient_id = request.args.get("patientId")
+    reports = _load_reports()
+
+    if requested_patient_id:
+        reports = [report for report in reports if report.get("patientId") == requested_patient_id]
+
+    reports.sort(key=lambda item: item.get("updatedAt") or item.get("createdAt") or "", reverse=True)
+
+    return jsonify({
+        "count": len(reports),
+        "reports": reports,
+    }), 200
 
 
 # ==== START APP ====
