@@ -122,6 +122,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # allow 5173 (vite) and 3000 (create-react-app) in dev
 CORS(app, origins=["http://localhost:5173", "http://localhost:3000"])
 
+
 # optionally limit upload size (uncomment if desired)
 # app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 MB
 
